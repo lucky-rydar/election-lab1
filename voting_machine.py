@@ -120,7 +120,7 @@ class KeyGiver():
         for line in file:
             line = line.split()[0]
             if str(line) == str(passport):
-                key_pair = RSA.generate(1024)
+                key_pair = RSA.generate(2048)
                 self._registered_keys.append([key_pair, passport])
                 return key_pair
             
