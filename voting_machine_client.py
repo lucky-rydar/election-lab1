@@ -7,34 +7,33 @@ from Crypto.Cipher import PKCS1_OAEP
 import random
 
 
-vm = VotingMachine()
-kg = KeyGiver()
-
 class VotingMachineClient():
-    def __init__(self, name, passport) -> None:
+    def __init__(self, name, passport, kg, vm) -> None:
         self.pub_key = None
         self.priv_key = None
         self.name = name
         self.passport = passport
+        self.kg = kg
+        self.vm = vm
         self.register_voter()
 
 
     def register_voter(self):
-        if not kg.check_if_registered(self.passport):
-            keys = kg.register(self.passport)
+        if not self.kg.check_if_registered(self.passport):
+            keys = self.kg.register(self.passport)
             if keys is None:
                 print("You are not authorized to vote!")
                 return
         else:
-            keys = kg.get_keys(self.passport)
+            keys = self.kg.get_keys(self.passport)
         if keys is not None:
             self.pub_key = keys.publickey().exportKey("PEM")
             self.priv_key = keys.exportKey("PEM")
-            vm.define_voters(self.pub_key)
+            self.vm.define_voter(self.pub_key)
         
 
     def get_bulletin(self):
-        bulletin = vm.form_bulletin(self.pub_key)
+        bulletin = self.vm.form_bulletin(self.pub_key)
         return bulletin
     
 
@@ -60,44 +59,13 @@ class VotingMachineClient():
         # TODO: move in voting machine
         # if candidate in self.vm.form_bulletin():
         data = candidate + "|" + datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        data_xor = vm._xor_encrypt_decrypt(data, vm.gamma_key)
+        data_xor = self.vm._xor_encrypt_decrypt(data, self.vm.gamma_key)
         signature = self.sign(data_xor, self.priv_key)
-        data_encrypted = self.encrypt(data_xor, vm.pub_key)
+        data_encrypted = self.encrypt(data_xor, self.vm.pub_key)
 
         # send to voting machine
-        voting_status = vm.get_voting_results(data_encrypted, signature, self.pub_key)
+        voting_status = self.vm.get_voting_results(data_encrypted, signature, self.pub_key)
 
         return voting_status
-
-
-
-def imitate_voting(name, passport):
-    print("Voter: ", name, passport)
-    voter = VotingMachineClient(name, passport)
-    candidates = voter.get_bulletin()
-    if candidates is not None:
-        chousen_candidate = candidates[random.randint(0, len(candidates) - 1)]
-        status = voter.vote(chousen_candidate)
-        print("status: ", status)
-
-if __name__ == "__main__":
-    imitate_voting('Vasya', '6472583019')
-    imitate_voting('Vasya', '6472583019')
-    imitate_voting('Sasha', '1111111111')
-    imitate_voting('Maria', '8350179426')
-    imitate_voting('Alexandr', '6857312409')
-    imitate_voting('Katya', '1980750196')
-
-
-
-    vm.count_results()
-    # key = "petuh852"
-    # text = "hello"
-    # vt = Voter('Vasya', '6472583019')
-    # vm = VotingMachine()
-    # enc =vt.xor_encrypt_decrypt(text, vm.gamma_key)
-    # print("enc: ", enc)
-    # dec = vt.xor_encrypt_decrypt(enc, vm.gamma_key)
-    # print("dec: ", dec)
 
     

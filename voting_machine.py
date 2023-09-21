@@ -9,27 +9,22 @@ class VotingMachine:
 
     def __init__(self):
         self._voters = []
-        # self._candidates = []
-        self._candidates = ['cand1', 'cand2', 'cand3']
+        self._candidates = []
+        
         self._voted_list = []
         self._voting_results = []
         self.gamma_key = "tsvk_vybori_2023_golosyite_za_jakubovicha"
-
-        self.kg = KeyGiver()
 
         # TSVK keys
         _key_pair = RSA.generate(2048)
         self.pub_key = _key_pair.publickey().export_key("PEM")
         self.__priv_key = _key_pair.exportKey("PEM")
-        # print("TSVK keys: ", self.__priv_key)
-        
 
-    def define_voters(self, pub_key):
-        # if not self.kg.check_if_registered(passport):
-        #     keys = self.kg.register(passport)
-        #     if keys is not None:
-        #         self._voters.append(keys.publickey().export_key("PEM"))
-        #         return keys
+    def define_voters(self, voter_pub_keys):
+        for pub_key in voter_pub_keys:
+            self.define_voter(pub_key)
+
+    def define_voter(self, pub_key):
         if pub_key not in self._voters:
             self._voters.append(pub_key)
 
@@ -49,10 +44,9 @@ class VotingMachine:
             return "Candidate you voted is not registered"
         if voter_pub_key in self._voted_list:
             return "You have already voted"
-        
+
         self._voted_list.append(voter_pub_key)
         self._voting_results.append(candidate)
-        print("Voting results: ", self._voting_results)
         return "You have successfully voted"
 
     def get_voting_results(self, result, signature, voter_pub_key):
@@ -83,7 +77,7 @@ class VotingMachine:
             message = message.encode("utf-8")
         decrypted_message = chipher.decrypt(message)
         return decrypted_message
-    
+
     def verify(self, message, signature, key):
         if not isinstance(key, RSA.RsaKey):
             key = RSA.import_key(key)
@@ -95,7 +89,6 @@ class VotingMachine:
             return True
         except (ValueError, TypeError):
             return False
-        
 
     def count_results(self):
         candidates = {}
@@ -104,31 +97,18 @@ class VotingMachine:
                 candidates[candidate] += 1
             else:
                 candidates[candidate] = 1
-            
-        print("Voting results: ", candidates)
 
+        return candidates
 
-    
 
     def voted_list(self) -> list:
-        pass
+        return self._voted_list
     
     def voting_results(self) -> list:
-        pass
+        return self._voting_results
 
 
-class Voter():
-    def __init__(self) -> None:
-        vm = VotingMachine()
-        pass
-
-    def generate_key(self):
-        pass
-
-    def sign(self, message):
-        pass
-
-
+APPROVED_VOTERS_FILE = "approved_voters.txt"
 
 class KeyGiver():
     def __init__(self):
@@ -136,13 +116,11 @@ class KeyGiver():
         pass
 
     def register(self, passport):
-        # read approved_voters.txt 
-        file = open("election-lab1/approved_voters.txt", "r")
+        file = open(APPROVED_VOTERS_FILE, "r")
         for line in file:
             line = line.split()[0]
             if str(line) == str(passport):
                 key_pair = RSA.generate(1024)
-                pub_key = key_pair.publickey()
                 self._registered_keys.append([key_pair, passport])
                 return key_pair
             
@@ -160,6 +138,3 @@ class KeyGiver():
                 return keys
         return None
 
-    def emit_keys(passport):
-        # must 
-        pass
