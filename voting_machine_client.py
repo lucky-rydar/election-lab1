@@ -56,8 +56,6 @@ class VotingMachineClient():
         return signature
     
     def vote(self, candidate):
-        # TODO: move in voting machine
-        # if candidate in self.vm.form_bulletin():
         data = candidate + "|" + datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         data_xor = self.vm._xor_encrypt_decrypt(data, self.vm.gamma_key)
         signature = self.sign(data_xor, self.priv_key)
