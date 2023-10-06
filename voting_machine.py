@@ -13,7 +13,7 @@ class VotingMachine:
         
         self._voted_list = []
         self._voting_results = []
-        self.gamma_key = "tsvk_vybori_2023_golosyite_za_jakubovicha"
+        self.gamma_key = "tsvk_vybori_2023_golosyite_za_kuchmu"
 
         # TSVK keys
         _key_pair = RSA.generate(2048)
